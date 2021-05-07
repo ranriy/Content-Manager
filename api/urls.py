@@ -12,5 +12,6 @@ urlpatterns = [
 	path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 	path('upload', views.upload_webinar_video),
 	path('contents', views.retrieve_contents),
-	path('content/<title>', views.retrieve_content_by_title)
+	path('content/<title>', views.retrieve_content_by_title),
+	path('contents/<data_type>', views.retrieve_content_most_viewed)
 ]

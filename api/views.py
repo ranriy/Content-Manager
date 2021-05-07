@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
+from django.db.models import Max
 from rest_framework import status
 from .serializers import *
 from .models import *
@@ -94,4 +95,13 @@ def retrieve_content_by_title(request,title):
         obj.num_views+=1
         obj.save()
     serializer = ContentSerializer(content, many=True)
+    return JsonResponse({'contents': serializer.data}, safe=False, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def retrieve_content_most_viewed(request,data_type):
+    contents = Content.objects.filter(data_type=data_type)
+    most_views = contents.aggregate(Max('num_views'))
+    print(type(most_views))
+    most_viewed_content = Content.objects.filter(num_views=most_views['num_views__max'])
+    serializer = ContentSerializer(most_viewed_content, many=True)
     return JsonResponse({'contents': serializer.data}, safe=False, status=status.HTTP_200_OK)
