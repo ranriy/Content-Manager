@@ -8,6 +8,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.db.models import Max
 from rest_framework import status
+from rest_framework import generics
+from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import *
 from .models import *
 
@@ -101,7 +103,29 @@ def retrieve_content_by_title(request,title):
 def retrieve_content_most_viewed(request,data_type):
     contents = Content.objects.filter(data_type=data_type)
     most_views = contents.aggregate(Max('num_views'))
-    print(type(most_views))
+    print(type(most_views),"1")
     most_viewed_content = Content.objects.filter(num_views=most_views['num_views__max'])
     serializer = ContentSerializer(most_viewed_content, many=True)
     return JsonResponse({'contents': serializer.data}, safe=False, status=status.HTTP_200_OK)
+
+class ContentList(generics.ListAPIView):
+    serializer_class = ContentSerializer
+    filter_backends = [DjangoFilterBackend]
+    search_fields = ['courses__coursename']
+    def get_queryset(self):
+        """
+        Optionally restricts the returned contents(webinars, videos),
+        by filtering against a `coursename` query parameter in the URL.
+        """
+        queryset = Content.objects.all()
+        coursename = self.request.query_params.get('coursename')
+        subjectname = self.request.query_params.get('subjectname')
+        tagname = self.request.query_params.get('tagname')
+        if coursename is not None:
+                queryset = queryset.filter(courses__name__exact=coursename)
+        if subjectname is not None:
+                queryset = queryset.filter(courses__subjects__name=subjectname)
+        if tagname is not None:
+                queryset = queryset.filter(tags__name=tagname)
+        return queryset
+   

@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework import routers
 from . import views
 
@@ -11,7 +11,8 @@ urlpatterns = [
 	path('', include(router.urls)),
 	path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 	path('upload', views.upload_webinar_video),
-	path('contents', views.retrieve_contents),
-	path('content/<title>', views.retrieve_content_by_title),
-	path('contents/<data_type>', views.retrieve_content_most_viewed)
-]
+	re_path('^contents/$', views.retrieve_contents),
+	path('content/<str:title>', views.retrieve_content_by_title),
+	re_path(r'^search/contents/$', views.ContentList.as_view()),
+	path('contents/<str:data_type>', views.retrieve_content_most_viewed),
+	]

@@ -11,7 +11,7 @@ class Content(models.Model):
 	title = models.CharField(max_length=200)
 	data_type = models.CharField(max_length=200)
 	num_views = models.IntegerField(default=0)
-	courses = models.ManyToManyField(Course)
+	courses = models.ManyToManyField(Course, related_name="contents")
 	created_at=models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
