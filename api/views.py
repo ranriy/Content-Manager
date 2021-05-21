@@ -67,9 +67,9 @@ class SubjectViewSet(viewsets.ModelViewSet):
                 instructor=payload['instructor'],
                 course_id=payload['course_id']
             )
+            serializer = SubjectSerializer(subject)
             return JsonResponse(serializer.data, 
-                            status=status.HTTP_201_CREATED,
-                            headers=headers)
+                            status=status.HTTP_201_CREATED)
         except Exception as e:
             return JsonResponse({'error': 'Something went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -80,14 +80,14 @@ class TagViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         try:
             payload = json.loads(request.body)
-            subject = Tag.objects.create(
+            tag = Tag.objects.create(
                 name=payload['name'],
                 course_id=payload['course_id'],
                 content_id=payload['content_id']
             )
+            serializer = TagSerializer(tag)
             return JsonResponse(serializer.data, 
-                            status=status.HTTP_201_CREATED,
-                            headers=headers)
+                            status=status.HTTP_201_CREATED)
         except Exception as e:
             return JsonResponse({'error': 'Something went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
    
@@ -152,4 +152,15 @@ class ContentList(generics.ListAPIView):
         if tagname is not None:
                 queryset = queryset.filter(tags__name=tagname)
         return queryset
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_personalized_content(request, id):
+    content = Content.objects.get(id=id)
+    related_courses = content.courses.all()
+    related_content = Content.objects.none()
+    for course in related_courses:
+        related_content = related_content | course.contents.all()
+    serializer = ContentSerializer(related_content, many=True)
+    return JsonResponse({'contents': serializer.data}, safe=False, status=status.HTTP_200_OK)
    

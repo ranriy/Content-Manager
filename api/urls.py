@@ -15,4 +15,5 @@ urlpatterns = [
 	path('content/<str:title>', views.retrieve_content_by_title),
 	re_path(r'^search/contents/$', views.ContentList.as_view()),
 	path('contents/<str:data_type>', views.retrieve_content_most_viewed),
+	path('play/contents/<int:id>', views.get_personalized_content)
 	]
