@@ -41,6 +41,16 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all().order_by('id')
     serializer_class = CourseSerializer
     #permission_classes = [permissions.IsAuthenticated]
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            course = self.get_object()
+            course.num_views+=1
+            course.save()
+            serializer =self.get_serializer(course)
+            return JsonResponse({'course': serializer.data}, safe=False, status=status.HTTP_200_OK)
+        except Exception as e:
+            return JsonResponse({'error': 'Something went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class SubjectViewSet(viewsets.ModelViewSet):
     queryset = Subject.objects.all().order_by('id')
@@ -58,7 +68,6 @@ class SubjectViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_201_CREATED,
                             headers=headers)
         except Exception as e:
-            print(e)
             return JsonResponse({'error': 'Something went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -77,7 +86,6 @@ class TagViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_201_CREATED,
                             headers=headers)
         except Exception as e:
-            print(e)
             return JsonResponse({'error': 'Something went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -101,9 +109,16 @@ def retrieve_content_by_title(request,title):
 
 @api_view(["GET"])
 def retrieve_content_most_viewed(request,data_type):
+    if data_type == 'course':
+        courses = Course.objects.all()
+        most_views = courses.aggregate(Max('num_views'))
+        most_viewed_course = Course.objects.filter(num_views=most_views['num_views__max'])
+        serializer = CourseSerializer(most_viewed_course, many=True)
+        return JsonResponse({'courses': serializer.data}, safe=False, status=status.HTTP_200_OK)
+
     contents = Content.objects.filter(data_type=data_type)
     most_views = contents.aggregate(Max('num_views'))
-    print(type(most_views),"1")
+    #print(type(most_views),"1")
     most_viewed_content = Content.objects.filter(num_views=most_views['num_views__max'])
     serializer = ContentSerializer(most_viewed_content, many=True)
     return JsonResponse({'contents': serializer.data}, safe=False, status=status.HTTP_200_OK)
